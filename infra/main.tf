@@ -43,4 +43,3 @@ module "gke_cluster" {
     preemptible    = false
   }]
 }
-
