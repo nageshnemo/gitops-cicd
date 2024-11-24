@@ -73,8 +73,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Authenticate with Google Cloud
-      uses: google-github-actions/auth@v1
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v2
       with:
         create_credentials_file: true
         workload_identity_provider: projects/784674387874/locations/global/workloadIdentityPools/githubactions/providers/github-cicd 
