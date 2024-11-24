@@ -1,6 +1,3 @@
-locals {
-  region = var.region
-}
 # VPC Network
 resource "google_compute_network" "vpc_network" {
   name = var.vpc_name
@@ -33,6 +30,7 @@ module "gke_cluster" {
   subnetwork        = google_compute_subnetwork.vpc_subnet.name
   ip_range_pods     = var.ip_range_pods
   ip_range_services = var.ip_range_services
+  region            = var.region
 
   node_pools = [{
     name           = "default-node-pool"
