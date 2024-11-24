@@ -17,8 +17,8 @@ jobs:
     env:
       PROJECT_ID: fast-ability-439911-u1                     
       PROJECT_NUMBER: 784674387874                          
-      WORKLOAD_IDENTITY_POOL: gitops-ci-pool                 
-      WORKLOAD_IDENTITY_PROVIDER: gitops-provider           
+      WORKLOAD_IDENTITY_POOL: gitops-github-identity-pool     
+      WORKLOAD_IDENTITY_PROVIDER: gitops-github-idp          
       WORKING_DIRECTORY: infra                           
       BUCKET_NAME: terraform-state-bucket-009876            
 
@@ -40,7 +40,7 @@ jobs:
       uses: google-github-actions/auth@v2
       with:
         workload_identity_provider: projects/${{ env.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ env.WORKLOAD_IDENTITY_POOL }}/providers/${{ env.WORKLOAD_IDENTITY_PROVIDER }}
-        service_account: gitops-ci@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
+        service_account: gitops-cicd@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
     - name: Terraform Init
       run: terraform init
