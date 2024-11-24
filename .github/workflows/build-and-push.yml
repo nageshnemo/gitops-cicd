@@ -76,8 +76,9 @@ jobs:
     - name: Authenticate with Google Cloud
       uses: google-github-actions/auth@v1
       with:
-        workload_identity_provider: "projects/fast-ability-439911-u1/locations/global/workloadIdentityPools/gitops-ci-pool/providers/gitops-provider"
-        service_account: "gitops-ci@fast-ability-439911-u1.iam.gserviceaccount.com"
+        create_credentials_file: true
+        workload_identity_provider: projects/784674387874/locations/global/workloadIdentityPools/githubactions/providers/github-cicd 
+        service_account: github-action@fast-ability-439911-u1.iam.gserviceaccount.com
 
     - name: Configure Docker Authentication
       run: |
