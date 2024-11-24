@@ -23,13 +23,13 @@ resource "google_compute_subnetwork" "vpc_subnet" {
 
 # GKE Cluster
 module "gke_cluster" {
-  source              = "terraform-google-modules/kubernetes-engine/google"
-  project_id          = var.project_id
-  name                = var.gke_cluster_name
-  network             = google_compute_network.vpc_network.name
-  subnetwork          = google_compute_subnetwork.vpc_subnet.name
-  ip_range_pods       = var.ip_range_pods
-  ip_range_services   = var.ip_range_services
+  source            = "terraform-google-modules/kubernetes-engine/google"
+  project_id        = var.project_id
+  name              = var.gke_cluster_name
+  network           = google_compute_network.vpc_network.name
+  subnetwork        = google_compute_subnetwork.vpc_subnet.name
+  ip_range_pods     = var.ip_range_pods
+  ip_range_services = var.ip_range_services
 
   node_pools = [{
     name           = "default-node-pool"
