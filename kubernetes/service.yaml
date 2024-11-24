@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: python-app-service
+  annotations:
+    cloud.google.com/load-balancer-type: "External"
+spec:
+  type: LoadBalancer
+  selector:
+    app: python-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
