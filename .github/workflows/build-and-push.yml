@@ -39,6 +39,7 @@ jobs:
       id: auth
       uses: google-github-actions/auth@v2
       with:
+        create_credentials_file: true
         workload_identity_provider: projects/${{ env.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ env.WORKLOAD_IDENTITY_POOL }}/providers/${{ env.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: gitops-cicd@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
