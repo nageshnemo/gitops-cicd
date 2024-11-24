@@ -86,18 +86,17 @@ jobs:
 
     - name: Configure Docker Authentication
       run: |
-        gcloud auth configure-docker us-central1-docker.pkg.dev
+          gcloud auth configure-docker us-central1-docker.pkg.dev
 
     - name: Build Docker Image
       run: |
-        docker build -t us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }} .
+          docker build -f ./DOCKERFILE -t us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }} ./app
 
     - name: Push Docker Image
       run: |
-        docker push us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }}
+          docker push us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }}
 
     - name: Tag Docker Image as Latest
       run: |
-        docker tag us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }} us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
-        docker push us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
-
+          docker tag us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }} us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
+          docker push us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
