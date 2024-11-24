@@ -40,8 +40,8 @@ jobs:
       uses: google-github-actions/auth@v2
       with:
         create_credentials_file: true
-        workload_identity_provider: projects/${{ env.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/gitops-github-identity-pool/providers/gitops-github-idp 
-        service_account: gitops-cicd@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
+        workload_identity_provider: projects/784674387874/locations/global/workloadIdentityPools/githubactions/providers/github-cicd 
+        service_account: github-action@fast-ability-439911-u1.iam.gserviceaccount.com
 
     - name: Terraform Init
       run: terraform init
