@@ -16,5 +16,6 @@ spec:
       containers:
       - name: my-python-app
         image: us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
