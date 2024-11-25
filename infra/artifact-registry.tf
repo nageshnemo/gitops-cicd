@@ -5,7 +5,7 @@ resource "google_artifact_registry_repository" "docker_repo" {
   format        = "DOCKER"
 
   docker_config {
-    immutable_tags = true # Prevents overwriting tags
+    immutable_tags = false # Prevents overwriting tags
   }
 
   labels = {
