@@ -1,17 +1,17 @@
-# Use an official Python runtime as the base image
+# Use a slim Python base image
 FROM python:3.9-slim
 
-# Set the working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy application code to the working directory
-COPY . .
+# Copy the application code into the container
+COPY main.py /app
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install required Python packages (if any)
+RUN pip install --no-cache-dir flask
 
-# Expose port 8080 for Flask
+# Expose the port for the application
 EXPOSE 8080
 
 # Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+CMD ["python", "main.py"]
