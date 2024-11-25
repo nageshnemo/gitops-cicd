@@ -39,7 +39,7 @@ def hello():
             <h1>Welcome to My Application</h1>
         </header>
         <main>
-            <p>This application is hosted on <strong>Google Kubernetes Engine (GKE)</strong>!</p>
+            <p>This application is hosted on <strong>Google Kubernetes Engine and managed in ArgoCD(GKE)</strong>!</p>
         </main>
     </body>
     </html>
