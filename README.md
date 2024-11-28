@@ -167,6 +167,6 @@ Feel free to reach out with questions or suggestions:
 
 - **Name**: Nagesh Kumar Singh  
 - **Email**: [singhnages319@gmail.com](mailto:singhnages319@gmail.com)  
-- **LinkedIn**: [linkedin.com/in/nageshkumar](https://linkedin.com/in/nageshkumar)
+- **LinkedIn**: [linkedin.com/in/nageshkumar](https://linkedin.com/in/nagesh-kumar-singh)
 
 ---
