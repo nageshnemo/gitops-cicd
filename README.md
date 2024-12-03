@@ -170,3 +170,10 @@ Feel free to reach out with questions or suggestions:
 - **LinkedIn**: [linkedin.com/in/nageshkumar](https://linkedin.com/in/nagesh-kumar-singh)
 
 ---
+
+
+<img width="1470" alt="image" src="https://github.com/user-attachments/assets/12f1ef29-9ad9-479c-bc00-d6e87f3025b0">
+
+
+<img width="1356" alt="image" src="https://github.com/user-attachments/assets/a61c7ac5-a844-4850-b44f-12386a51dad8">
+
