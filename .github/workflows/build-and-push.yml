@@ -1,102 +1,215 @@
-name: 'CI/CD Pipeline with Terraform and Docker'
+name: 'Build and Deploy to GKE'
 
 on:
   push:
     branches:
-      - 'feature/**'
-      - main
-  pull_request:
+      - '"main"'
+
+env:
+  PROJECT_ID: 'fast-ability-439911-u1' # TODO: update to your Google Cloud project ID
+  GAR_LOCATION: 'us-central1' # TODO: update to your region
+  GKE_CLUSTER: 'test-cluster' # TODO: update to your cluster name
+  GKE_ZONE: 'us-central1-a' # TODO: update to your cluster zone
+  DEPLOYMENT_NAME: 'gke-test' # TODO: update to your deployment name
+  REPOSITORY: 'samples' # TODO: update to your Artifact Registry docker repository name
+  IMAGE: 'static-site'
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider' # TODO: update to your workload identity provider
 
 jobs:
-  terraform:
-    name: 'Terraform CI/CD'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-    env:
-      PROJECT_ID: fast-ability-439911-u1                     
-      PROJECT_NUMBER: 784674387874                          
-      WORKLOAD_IDENTITY_POOL: gitops-github-identity-pool     
-      WORKLOAD_IDENTITY_PROVIDER: gitops-github-idp          
-      WORKING_DIRECTORY: infra                           
-      BUCKET_NAME: terraform-state-bucket-009876            
+  setup-build-publish-deploy:
+    name: 'Setup, Build, Publish, and Deploy'
+    runs-on: 'ubuntu-latest'
+    environment: 'production'
 
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_wrapper: false
-
-    - name: Authenticate to Google Cloud
-      id: auth
-      uses: google-github-actions/auth@v2
-      with:
-        create_credentials_file: true
-        workload_identity_provider: projects/784674387874/locations/global/workloadIdentityPools/githubactions/providers/github-cicd 
-        service_account: github-action@fast-ability-439911-u1.iam.gserviceaccount.com
-
-    - name: Terraform Init
-      run: terraform init
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-
-    - name: Terraform Format
-      run: terraform fmt
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-
-    - name: Terraform Validate
-      run: terraform validate
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-
-    - name: Terraform Plan
-      run: terraform plan
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve
-      working-directory: ${{ env.WORKING_DIRECTORY }}
-
-  build-and-push:
-    name: 'Build and Push Docker Image'
-    runs-on: ubuntu-latest
-    needs: terraform  # Ensure Terraform job completes first
     permissions:
       contents: 'read'
       id-token: 'write'
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: 'Checkout'
+        uses: 'actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332' # actions/checkout@v4
 
-    - name: Authenticate to Google Cloud
-      id: auth
-      uses: google-github-actions/auth@v2
-      with:
-        create_credentials_file: true
-        workload_identity_provider: projects/784674387874/locations/global/workloadIdentityPools/githubactions/providers/github-cicd 
-        service_account: github-action@fast-ability-439911-u1.iam.gserviceaccount.com
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          create_credentials_file: true
+          workload_identity_provider: projects/784674387874/locations/global/workloadIdentityPools/githubactions/providers/github-cicd 
+          service_account: github-action@fast-ability-439911-u1.iam.gserviceaccount.com
 
-    - name: Configure Docker Authentication
-      run: |
-          gcloud auth configure-docker us-central1-docker.pkg.dev
+      - name: 'Set up GKE credentials'
+        uses: 'google-github-actions/get-gke-credentials@6051de21ad50fbb1767bc93c11357a49082ad116' # google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: '${{ env.GKE_CLUSTER }}'
+          location: '${{ env.GKE_ZONE }}'
 
-    - name: Build Docker Image
-      run: |
-          docker build -f ./DOCKERFILE -t us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }} ./app
 
-    - name: Push Docker Image
-      run: |
-          docker push us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }}
 
-    - name: Tag Docker Image as Latest
-      run: |
-          docker tag us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }} us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
-          docker push us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
+
+      - name: Get current version
+        id: get-version
+        run: |
+          CURRENT_VERSION=$(kubectl get service my-service -n ${{ env.K8S_NAMESPACE }} -o jsonpath='{.spec.selector.version}')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Deploy new version
+        env:
+          CURRENT_VERSION: ${{ steps.get-version.outputs.current_version }}
+          NEW_VERSION: ${{ steps.get-version.outputs.current_version == 'blue' && 'green' || 'blue' }}
+        run: |
+          # Deploy new version
+          envsubst < test-bg/deployment-${NEW_VERSION}.yaml | kubectl apply -f -
+          
+          # Wait for deployment to be ready
+          kubectl rollout status deployment/${NEW_VERSION} -n ${{ env.K8S_NAMESPACE }}
+          
+          # Switch traffic to new version
+          kubectl patch service my-service -n ${{ env.K8S_NAMESPACE }} --type='json' -p='[{"op": "replace", "path": "/spec/selector/version", "value":"'${NEW_VERSION}'"}]'
+          
+          # Wait for service to stabilize
+          sleep 30
+          
+          # Delete old version
+          kubectl delete deployment ${CURRENT_VERSION} -n ${{ env.K8S_NAMESPACE }}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# name: 'CI/CD Pipeline with Terraform and Docker'
+
+# on:
+#   push:
+#     branches:
+#       - 'feature/**'
+#       - main
+#   pull_request:
+
+# jobs:
+#   terraform:
+#     name: 'Terraform CI/CD'
+#     runs-on: ubuntu-latest
+#     permissions:
+#       contents: 'read'
+#       id-token: 'write'
+#     env:
+#       PROJECT_ID: fast-ability-439911-u1                     
+#       PROJECT_NUMBER: 784674387874                          
+#       WORKLOAD_IDENTITY_POOL: gitops-github-identity-pool     
+#       WORKLOAD_IDENTITY_PROVIDER: gitops-github-idp          
+#       WORKING_DIRECTORY: infra                           
+#       BUCKET_NAME: terraform-state-bucket-009876            
+
+#     defaults:
+#       run:
+#         shell: bash
+
+#     steps:
+#     - name: Checkout Repository
+#       uses: actions/checkout@v3
+
+#     - name: Setup Terraform
+#       uses: hashicorp/setup-terraform@v3
+#       with:
+#         terraform_wrapper: false
+
+#     - name: Authenticate to Google Cloud
+#       id: auth
+#       uses: google-github-actions/auth@v2
+#       with:
+#         create_credentials_file: true
+#         workload_identity_provider: projects/784674387874/locations/global/workloadIdentityPools/githubactions/providers/github-cicd 
+#         service_account: github-action@fast-ability-439911-u1.iam.gserviceaccount.com
+
+#     - name: Terraform Init
+#       run: terraform init
+#       working-directory: ${{ env.WORKING_DIRECTORY }}
+
+#     - name: Terraform Format
+#       run: terraform fmt
+#       working-directory: ${{ env.WORKING_DIRECTORY }}
+
+#     - name: Terraform Validate
+#       run: terraform validate
+#       working-directory: ${{ env.WORKING_DIRECTORY }}
+
+#     - name: Terraform Plan
+#       run: terraform plan
+#       working-directory: ${{ env.WORKING_DIRECTORY }}
+
+#     - name: Terraform Apply
+#       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+#       run: terraform apply -auto-approve
+#       working-directory: ${{ env.WORKING_DIRECTORY }}
+
+#   build-and-push:
+#     name: 'Build and Push Docker Image'
+#     runs-on: ubuntu-latest
+#     needs: terraform  # Ensure Terraform job completes first
+#     permissions:
+#       contents: 'read'
+#       id-token: 'write'
+
+#     steps:
+#     - name: Checkout Code
+#       uses: actions/checkout@v3
+
+#     - name: Authenticate to Google Cloud
+#       id: auth
+#       uses: google-github-actions/auth@v2
+#       with:
+#         create_credentials_file: true
+#         workload_identity_provider: projects/784674387874/locations/global/workloadIdentityPools/githubactions/providers/github-cicd 
+#         service_account: github-action@fast-ability-439911-u1.iam.gserviceaccount.com
+
+#     - name: Configure Docker Authentication
+#       run: |
+#           gcloud auth configure-docker us-central1-docker.pkg.dev
+
+#     - name: Build Docker Image
+#       run: |
+#           docker build -f ./DOCKERFILE -t us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }} ./app
+
+#     - name: Push Docker Image
+#       run: |
+#           docker push us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }}
+
+#     - name: Tag Docker Image as Latest
+#       run: |
+#           docker tag us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:${{ github.sha }} us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
+#           docker push us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
