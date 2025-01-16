@@ -10,6 +10,7 @@ env:
   GAR_LOCATION: 'us-central1'
   GKE_CLUSTER: 'cluster-1' 
   GKE_ZONE: 'us-central1-c'
+  K8S_NAMESPACE: default
   
 jobs:
   setup-build-publish-deploy:
@@ -57,7 +58,7 @@ jobs:
           NEW_VERSION: ${{ steps.get-version.outputs.current_version == 'blue' && 'green' || 'blue' }}
         run: |
           # Deploy new version
-          envsubst < test-bg/deployment-${NEW_VERSION}.yaml | kubectl apply -f -
+          envsubst < kubernetes/deployment-${NEW_VERSION}.yaml | kubectl apply -f -
           
           # Wait for deployment to be ready
           kubectl rollout status deployment/${NEW_VERSION} -n ${{ env.K8S_NAMESPACE }}
