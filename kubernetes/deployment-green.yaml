@@ -19,3 +19,6 @@ spec:
         image: us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
         ports:
         - containerPort: 80
+
+
+        
