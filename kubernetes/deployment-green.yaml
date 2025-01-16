@@ -16,9 +16,8 @@ spec:
     spec:
       containers:
       - name: my-app
-        image: us-central1-docker.pkg.dev/fast-ability-439911-u1/my-python-app-repo/my-python-app:latest
+        image: asia-south1-docker.pkg.dev/fast-ability-439911-u1/react-app/frontend-app:latest
         ports:
         - containerPort: 80
 
 
-        
